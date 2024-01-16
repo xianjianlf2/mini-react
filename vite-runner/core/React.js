@@ -107,25 +107,33 @@ function initChildren(fiber, children) {
     prevChild = newFiber;
   });
 }
-function performUnitOfWork(fiber) {
-  const isFunctionComponent = typeof fiber.type === "function";
-  if (!isFunctionComponent) {
-    if (!fiber.dom) {
-      // 1. create dom
-      const dom = (fiber.dom = createDom(fiber.type));
 
-      // fiber.parent.dom.append(dom)
-      // 2. handle props
-      updateProps(dom, fiber.props);
-    }
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)];
+  initChildren(fiber, children);
+}
+
+function updateHostComponent(fiber) {
+  if (!fiber.dom) {
+    // 1. create dom
+    const dom = (fiber.dom = createDom(fiber.type));
+
+    // fiber.parent.dom.append(dom)
+    // 2. handle props
+    updateProps(dom, fiber.props);
   }
 
-  const children = isFunctionComponent
-    ? [fiber.type(fiber.props)]
-    : fiber.props.children;
+  const children = fiber.props.children;
   // 3. set pointer
   initChildren(fiber, children);
-  // 4. return next unit of work
+}
+function performUnitOfWork(fiber) {
+  const isFunctionComponent = typeof fiber.type === "function";
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateHostComponent(fiber);
+  }
 
   if (fiber.child) {
     return fiber.child;
