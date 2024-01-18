@@ -1,8 +1,16 @@
-import React from "./core/React.js";
+import React from './core/React.js'
 
 // function component
 function Counter({ num }) {
-  return <div>counter: {num} </div>;
+  function handleClick() {
+    console.log('click')
+  }
+  return (
+    <>
+      <div>counter: {num} </div>
+      <button onClick={handleClick}>Click</button>
+    </>
+  )
 }
 // const App = React.createElement("div", { id: "app" }, "hi", "-mini react");
 const App = (
@@ -11,6 +19,6 @@ const App = (
     <Counter num={10} />
     <Counter num={120} />
   </div>
-);
+)
 
-export default App;
+export default App
