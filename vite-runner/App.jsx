@@ -1,27 +1,29 @@
 import React from './core/React.js'
 
-// if we declare var in the function component
-// the state will be reset in the next render
+let showBar = false
+
 let count = 0
-function Counter({ num }) {
+function Foo() {
+  const [count, setCount] = React.useState(10)
+  const [bar, setBar] = React.useState('')
+
   function handleClick() {
-    count++
-    React.update()
+    setCount((c) => c + 1)
+    setBar((s) => s + 'a')
   }
   return (
-    <>
-      <div>Number: {num} </div>
-      <div>counter: {count} </div>
-      <button onClick={handleClick}>Click</button>
-    </>
+    <div>
+      <div>{count}</div>
+      <div>{bar}</div>
+      <button onClick={handleClick}>add </button>
+    </div>
   )
 }
-// const App = React.createElement("div", { id: "app" }, "hi", "-mini react");
+
 const App = (
   <div>
     mini react
-    <Counter num={10} />
-    {/* <Counter num={120} /> */}
+    <Foo />
   </div>
 )
 
