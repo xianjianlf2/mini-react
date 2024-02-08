@@ -9,13 +9,30 @@ function Foo() {
 
   function handleClick() {
     setCount((c) => c + 1)
-    setBar((s) => s + 'a')
+    // setBar((s) => s + 'a')
+    setBar('bsdfa')
   }
+
+  React.useEffect(() => {
+    console.log('init')
+  }, [])
+
+  React.useEffect(() => {
+    console.log('bar')
+    return () => {
+      console.log('cleanup bar')
+    }
+  }, [bar])
+
+  React.useEffect(() => {
+    console.log('count')
+  }, [count])
+
   return (
     <div>
       <div>{count}</div>
       <div>{bar}</div>
-      <button onClick={handleClick}>add </button>
+      <button onClick={handleClick}>add</button>
     </div>
   )
 }

@@ -41,7 +41,6 @@ function update() {
     }
     nextUnitOfWork = wipRoot
   }
-
 }
 
 let wipRoot = null
@@ -69,9 +68,52 @@ function workLoop(deadline) {
 function commitRoot() {
   deletions.forEach(commitDeletion)
   commitWork(wipRoot.child)
+  commitEffectHooks()
   currentRoot = wipRoot
   wipRoot = null
   deletions = []
+}
+
+function commitEffectHooks() {
+  function run(fiber) {
+    if (!fiber) return
+
+    if (!fiber.alternate) {
+      fiber.effectHooks?.forEach((hook) => {
+        hook.cleanup = hook.callback()
+      })
+    } else {
+      // update
+      fiber.effectHooks?.forEach((newHook, index) => {
+        if (newHook.deps.length > 0) {
+          const oldEffectHook = fiber.alternate?.effectHooks[index]
+          const needUpdate = oldEffectHook?.deps.some((oldDep, i) => {
+            return oldDep !== newHook.deps[i]
+          })
+
+          needUpdate && (newHook.cleanup = newHook.callback())
+        }
+      })
+    }
+
+    fiber.effectHook?.callback()
+    run(fiber.child)
+    run(fiber.sibling)
+  }
+
+  function runCleanup(fiber) {
+    if (!fiber) return
+    fiber.alternate?.effectHooks?.forEach((hook) => {
+      if (hook.deps.length > 0) {
+        hook.cleanup && hook.cleanup()
+      }
+    })
+
+    runCleanup(fiber.child)
+    runCleanup(fiber.sibling)
+  }
+  runCleanup(wipRoot)
+  run(wipRoot)
 }
 
 function commitDeletion(fiber) {
@@ -164,18 +206,15 @@ function reconcileChildren(fiber) {
           dom: null,
           effectTag: 'placement'
         }
-
       }
       if (oldFiber) {
         deletions.push(oldFiber)
       }
-
     }
 
     if (oldFiber) {
       oldFiber = oldFiber.sibling
     }
-
 
     if (index === 0) {
       fiber.child = newFiber
@@ -185,7 +224,6 @@ function reconcileChildren(fiber) {
     if (newFiber) {
       prevChild = newFiber
     }
-
   })
 
   while (oldFiber) {
@@ -197,22 +235,18 @@ function reconcileChildren(fiber) {
 function updateFunctionComponent(fiber) {
   stateHooks = []
   stateHookIndex = 0
+  effectHooks = []
   wipFiber = fiber
   fiber.props.children = [fiber.type(fiber.props)]
   reconcileChildren(fiber)
-
 }
 
 function updateHostComponent(fiber) {
   if (!fiber.dom) {
-    // 1. create dom
     const dom = (fiber.dom = createDom(fiber.type))
-    // fiber.parent.dom.append(dom)
-    // 2. handle props
     updateProps(dom, fiber.props, {})
   }
 
-  // 3. set pointer
   reconcileChildren(fiber)
 }
 function performUnitOfWork(fiber) {
@@ -235,38 +269,64 @@ function performUnitOfWork(fiber) {
 
 requestIdleCallback(workLoop)
 
-
 let stateHooks
 let stateHookIndex
 function useState(initial) {
   let currentFiber = wipFiber
   const oldHook = currentFiber.alternate?.stateHooks[stateHookIndex]
   const stateHook = {
-    state: oldHook ? oldHook.state : initial
+    state: oldHook ? oldHook.state : initial,
+    queue: oldHook ? oldHook.queue : []
   }
+
+  stateHook.queue.forEach((action) => {
+    stateHook.state = action(stateHook.state)
+  })
+
+  stateHook.queue = []
 
   stateHookIndex++
   stateHooks.push(stateHook)
 
-
   currentFiber.stateHooks = stateHooks
 
   function setState(action) {
-    stateHook.state = action(stateHook.state)
+    const eagerState =
+      typeof action === 'function' ? action(stateHook.state) : action
+    if (eagerState === stateHook.state) {
+      return
+    }
+
+    // if action is not a function
+    stateHook.queue.push(typeof action === 'function' ? action : () => action)
+
     wipRoot = {
       ...currentFiber,
       alternate: currentFiber
-
     }
     nextUnitOfWork = wipRoot
   }
   return [stateHook.state, setState]
 }
 
+let effectHooks
+function useEffect(callback, deps) {
+  const effectHook = {
+    callback,
+    deps,
+    cleanup: undefined
+  }
+
+  effectHooks.push(effectHook)
+
+  wipFiber.effectHooks = effectHooks
+}
+
 const React = {
   update,
   useState,
   render,
+  useEffect,
   createElement
 }
 
