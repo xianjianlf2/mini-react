@@ -35,6 +35,19 @@ pnpm dev
 
 For the bare-bones version, open the root `index.html` directly — no build step.
 
-## The `mini-*` series
+---
 
-[mini-vue](https://github.com/xianjianlf2/mini-vue) · [mini-koa](https://github.com/xianjianlf2/mini-koa) · [mini-webpack](https://github.com/xianjianlf2/mini-webpack) · [mini-complier](https://github.com/xianjianlf2/mini-complier) · [ts-axios](https://github.com/xianjianlf2/ts-axios)
+## `mini-*` 源码学习系列
+
+手写主流框架 / 工具的最小可运行实现，每个仓库只追「核心主线」，不堆功能。
+
+| 仓库 | 内容 |
+| --- | --- |
+| [mini-vue](https://github.com/xianjianlf2/mini-vue) | 手写 Vue3：响应式 / runtime / 编译器 |
+| **mini-react**（本仓库） | 手写 React：Fiber / reconciliation / Hooks |
+| [mini-koa](https://github.com/xianjianlf2/mini-koa) | 手写 Koa：中间件洋葱模型 / context |
+| [mini-webpack](https://github.com/xianjianlf2/mini-webpack) | 手写 webpack：依赖图 / loader / plugin |
+| [mini-compiler](https://github.com/xianjianlf2/mini-compiler) | 手写 the-super-tiny-compiler：词法 / 语法 / 转换 / 生成 |
+| [ts-axios](https://github.com/xianjianlf2/ts-axios) | 手写 axios（TypeScript 版） |
+
+> Talk is cheap. Read the code.
